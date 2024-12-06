@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rose-crested Blue Pipit Counts Treemap with Animation</title>
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<header>
+    <nav>
+            <a href="treemap.html">Treemap</a>
+            <a href="barchart.html">BarChart</a>
+            <a href="areachart.html">AreaChart</a>
+    </nav>
+</header>
+<body class="body-container background">
+    <h1 class="title">Rose-crested Blue Pipit Counts</h1>
+    <div class="">
+        <svg id="chart"></svg>
+    </div>
+
+     <title>Rose-crested Blue Pipit Counts</title>
+    <style>
+        .bar {
+            cursor: pointer;
+        }
+        .label {
+            font-size: 12px;
+            fill: black;
+        }
+        .axis-label {
+            font-size: 14px;
+            fill: black;
+        }
+        .legend-label {
+            font-size: 12px;
+            fill: black;
+            text-anchor: middle;
+        }
+    </style>
+
+
+    <script>
+        d3.csv("AllBirdsv4.csv", function(data) {
+            var filteredData = data.filter(function(d) {
+                return d.English_name === "Rose-crested Blue Pipit";
+            }).map(function(d) {
+                d.year = +d.Date.split("/")[2];
+                return d;
+            });
+
+            var countsByYear = {};
+            filteredData.forEach(function(d) {
+                countsByYear[d.year] = (countsByYear[d.year] || 0) + 1;
+            });
+
+            var dataArray = [];
+            for (var year in countsByYear) {
+                dataArray.push({ year: +year, count: countsByYear[year] });
+            }
+
+            dataArray.sort(function(a, b) {
+                return a.year - b.year;
+            });
+
+            var margin = { top: 20, right: 70, bottom: 60, left: 70 };
+            var width = 800 - margin.left - margin.right;
+            var height = 400 - margin.top - margin.bottom;
+
+            var svg = d3.select("#chart")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom);
+
+            var chartArea = svg.append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            var x = d3.scale.ordinal()
+                .domain(dataArray.map(function(d) { return d.year; }))
+                .rangeBands([0, width], 0.1);
+
+            var y = d3.scale.linear()
+                .domain([0, d3.max(dataArray, function(d) { return d.count; })])
+                .range([height, 0]);
+
+            var colorScale = d3.scale.linear()
+                .domain([0, d3.max(dataArray, function(d) { return d.count; })])
+                .range(["#ffeda0", "#f03b20"]);
+
+            chartArea.append("g")
+                .attr("transform", "translate(0," + height + ")")
+                .call(d3.svg.axis().scale(x).orient("bottom").tickFormat(d3.format("d")));
+
+            chartArea.append("g")
+                .call(d3.svg.axis().scale(y).orient("left"));
+
+            svg.append("text")
+                .attr("class", "axis-label")
+                .attr("text-anchor", "middle")
+                .attr("x", margin.left + width / 2)
+                .attr("y", height + margin.top + margin.bottom - 10)
+                .text("Year");
+
+            svg.append("text")
+                .attr("class", "axis-label")
+                .attr("text-anchor", "middle")
+                .attr("transform", "rotate(-90)")
+                .attr("x", -(margin.top + height / 2))
+                .attr("y", 20)
+                .text("Count of Rose-crested Blue Pipits");
+
+            var index = 0;
+            var interval = setInterval(function() {
+                if (index >= dataArray.length) {
+                    clearInterval(interval);
+                    return;
+                }
+
+                var currentData = dataArray[index];
+
+                chartArea.append("rect")
+                    .datum(currentData)
+                    .attr("class", "bar")
+                    .attr("x", x(currentData.year))
+                    .attr("y", y(0))
+                    .attr("width", x.rangeBand())
+                    .attr("height", 0)
+                    .attr("fill", colorScale(currentData.count))
+                    .transition()
+                    .duration(200)
+                    .attr("y", y(currentData.count))
+                    .attr("height", height - y(currentData.count));
+
+                chartArea.append("text")
+                    .datum(currentData)
+                    .attr("class", "label")
+                    .attr("x", x(currentData.year) + x.rangeBand() / 2)
+                    .attr("y", y(0) - 5)
+                    .text(currentData.count)
+                    .transition()
+                    .duration(200)
+                    .attr("y", y(currentData.count) - 5);
+
+                index++;
+            }, 250);
+
+            var legendWidth = 20;
+            var legendHeight = 200;
+            var legendMargin = 10;
+
+            var legend = svg.append("g")
+                .attr("transform", "translate(" + (width + margin.left + legendMargin) + "," + margin.top + ")");
+
+            var legendScale = d3.scale.linear()
+                .domain(colorScale.domain())
+                .range([legendHeight, 0]);
+
+            var legendAxis = d3.svg.axis().scale(legendScale).orient("right").ticks(5);
+
+            var gradient = svg.append("defs")
+                .append("linearGradient")
+                .attr("id", "gradient")
+                .attr("x1", "0%")
+                .attr("x2", "0%")
+                .attr("y1", "100%")
+                .attr("y2", "0%");
+
+            gradient.append("stop")
+                .attr("offset", "0%")
+                .attr("stop-color", "#ffeda0");
+
+            gradient.append("stop")
+                .attr("offset", "100%")
+                .attr("stop-color", "#f03b20");
+
+            legend.append("rect")
+                .attr("x", 0)
+                .attr("width", legendWidth)
+                .attr("height", legendHeight)
+                .style("fill", "url(#gradient)");
+
+            legend.append("g")
+                .attr("transform", "translate(" + legendWidth + ",0)")
+                .call(legendAxis);
+
+            legend.append("text")
+                .attr("class", "legend-label")
+                .attr("x", legendWidth / 2)
+                .attr("y", -10)
+                .text("Frequency")
+                .attr("text-anchor", "middle");
+        });
+    </script>
+</body>
+</html>
+

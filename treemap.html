@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rose-crested Blue Pipit Counts Treemap with Animation</title>
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<header>
+    <nav>
+        <a href="treemap.html">Treemap</a>
+        <a href="barchart.html">BarChart</a>
+        <a href="areachart.html">AreaChart</a>
+    </nav>
+</header>
+<body class="body-container background">
+    <h1 class="title">Rose-crested Blue Pipit Counts Treemap</h1>
+    <div class="">
+        <svg id="chart"></svg>
+    </div>
+
+
+    <script>
+        d3.csv("AllBirdsv4.csv", function(data) {
+            // Filter and process data
+            var filteredData = data.filter(function(d) {
+                return d.English_name === "Rose-crested Blue Pipit";
+            }).map(function(d) {
+                d.year = +d.Date.split("/")[2];
+                return d;
+            });
+
+            // counts by year
+            var countsByYear = {};
+            filteredData.forEach(function(d) {
+                countsByYear[d.year] = (countsByYear[d.year] || 0) + 1;
+            });
+
+            // data for treemap
+            var treemapData = {
+                name: "Rose-crested Blue Pipit",
+                children: Object.keys(countsByYear).sort().map(function(year) {
+                    return { name: year, value: countsByYear[year] };
+                })
+            };
+
+            // Set dimensions and margins
+            var width = 1200;
+            var height = 800;
+            var color = d3.scale.linear()
+                .domain([0, d3.max(treemapData.children, function(d) { return d.value; })])
+                .range(["#03e3fc", "#033dfc"]);
+
+            var svg = d3.select("#chart")
+                .attr("width", width)
+                .attr("height", height);
+
+            // Create the treemap layout
+            var treemap = d3.layout.treemap()
+                .size([width, height])
+                .padding(2)
+                .value(function(d) { return d.value; });
+
+            // Animate the treemap year by year
+            var years = treemapData.children.map(d => d.name);
+            var index = 0;
+
+            function updateTreemap() {
+                var currentData = {
+                    name: "Rose-crested Blue Pipit",
+                    children: treemapData.children.slice(0, index + 1) 
+                };
+
+                // Calculate layout
+                var nodes = treemap.nodes(currentData).filter(d => !d.children);
+
+                // Bind data
+                var rects = svg.selectAll(".node")
+                    .data(nodes, d => d.name);
+
+                // Enter selection
+                var enter = rects.enter()
+                    .append("g")
+                    .attr("class", "node")
+                    .attr("transform", d => `translate(${d.x},${d.y})`);
+
+                enter.append("rect")
+                    .attr("width", 0) 
+                    .attr("height", 0) 
+                    .attr("fill", d => color(d.value))
+                    .style("stroke", "white")
+                    .transition()
+                    .duration(500)
+                    .attr("width", d => d.dx)
+                    .attr("height", d => d.dy);
+
+                enter.append("text")
+                    .attr("class", "label")
+                    .attr("x", d => d.dx / 2)
+                    .attr("y", d => d.dy / 2)
+                    .attr("text-anchor", "middle")
+                    .style("fill", "white")
+                    .style("font-size", "30px")
+                    .text(d => `${d.name}: ${d.value}`);
+
+                // Update positions of all elements
+                rects.transition()
+                    .duration(700)
+                    .attr("transform", d => `translate(${d.x},${d.y})`);
+
+                rects.select("rect")
+                    .transition()
+                    .duration(1000)
+                    .attr("width", d => d.dx)
+                    .attr("height", d => d.dy);
+
+                rects.select(".label")
+                    .attr("x", d => d.dx / 2)
+                    .attr("y", d => d.dy / 2)
+                    .text(d => `${d.name}: ${d.value}`);
+
+                if (index < years.length - 1) {
+                    index++;
+                    setTimeout(updateTreemap, 1000); 
+                }
+            }
+
+            updateTreemap();
+        });
+    </script>
+</body>
+</html>

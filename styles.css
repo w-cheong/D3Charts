@@ -1,0 +1,43 @@
+.node {
+    font-size: 45px;
+    fill: black;
+}
+.label {
+    pointer-events: none;
+}
+
+.background{
+    background-color: rgb(168, 166, 166) ;
+}
+
+.title{
+    color: antiquewhite;
+    font-size: 45px;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+
+.body-container{
+    display: inline;
+    text-align: center;
+}
+
+nav{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
+}
+
+
+a{
+    text-decoration: none;
+    font-size: 35px;
+    padding: 10px;
+    margin: 25px;
+    font-family:monospace;
+    color: aliceblue;
+}
+
+a:hover{
+    background-color: rgba(240, 248, 255, 0.219);
+}
