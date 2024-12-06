@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Word Cloud</title>
+  <script src="/d3.v3.min.js"></script>
+  <script src="/d3.layout.cloud.js"></script>
+
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0;
+      min-height: 100vh;
+      background-color: #333333; /* Dark grey background */
+      flex-direction: column;
+      text-align: center;
+    }
+    svg {
+      display: block;
+    }
+    h1 {
+      color: yellow; /* Yellow color for the header text */
+      font-size: 2rem;
+      margin-bottom: 20px;
+    }
+    nav{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
+    }
+    a{
+        text-decoration: none;
+        font-size: 35px;
+        padding: 10px;
+        margin: 25px;
+        font-family:monospace;
+        color: aliceblue;
+    }
+
+    a:hover{
+        background-color: rgba(240, 248, 255, 0.219);
+    }
+  </style>
+</head>
+<header>
+  <nav>
+          <a href="treemap.html">Treemap</a>
+          <a href="barchart.html">BarChart</a>
+          <a href="areachart.html">AreaChart</a>
+          <a href="WordCloud.html">WordCloud</a>
+
+  </nav>
+</header>
+<body class="body-container background">
+  <h1 class="title">Kaiso Birds WordCloud</h1>
+  <div class="">
+      <svg id="chart"></svg>
+  </div>
+
+  
+  <script>
+    // Word cloud data
+    const words = [
+      { text: "Queenscoat", size: 241 },
+      { text: "Orange Pine Plover", size: 215 },
+      { text: "Rose-crested Blue Pipit", size: 186 },
+      { text: "Lesser Birchbeere", size: 150 },
+      { text: "Bombadil", size: 140 },
+      { text: "Carries Champagne Pipit", size: 104 },
+      { text: "Broad-winged Jojo", size: 94 },
+      { text: "Ordinary Snape", size: 94 },
+      { text: "Scrawny Jay", size: 91 },
+      { text: "Eastern Corn Skeet", size: 88 },
+      { text: "Green-tipped Scarlet Pipit", size: 88 },
+      { text: "Darkwing Sparrow", size: 86 },
+      { text: "Vermillion Trillian", size: 84 },
+      { text: "Canadian Cootamum", size: 82 },
+      { text: "Pinkfinch", size: 73 },
+      { text: "Purple Tooting Tout", size: 73 },
+      { text: "Bent-beak Riffraff", size: 72 },
+      { text: "Blue-collared Zipper", size: 67 },
+      { text: "Qax", size: 53 }
+    ];
+
+    // Set up dimensions
+    const width = 800;
+    const height = 600;
+
+    const layout = d3.layout.cloud()
+      .size([width, height])
+      .words(words.map(d => ({ text: d.text, size: d.size })))
+      .padding(5)
+      .font("Impact")
+      .fontSize(d => d.size / 2)
+      .rotate(() => (Math.random() > 0.5 ? 0 : 90))
+      .on("end", draw);
+
+    layout.start();
+
+    // Function to generate random colors
+    function getRandomColor() {
+      const letters = '0123456789ABCDEF';
+      let color = '#';
+      for (let i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+      }
+      return color;
+    }
+
+    function draw(words) {
+      d3.select("body")
+        .append("svg")
+        .attr("width", layout.size()[0])
+        .attr("height", layout.size()[1])
+        .append("g")
+        .attr("transform", `translate(${layout.size()[0] / 2},${layout.size()[1] / 2})`)
+        .selectAll("text")
+        .data(words)
+        .enter()
+        .append("text")
+        .style("font-size", d => `${d.size}px`)
+        .style("font-family", "Impact")
+        .style("fill", () => getRandomColor())  // Apply random color
+        .attr("text-anchor", "middle")
+        .attr("transform", d => `translate(${d.x},${d.y})rotate(${d.rotate})`)
+        .text(d => d.text);
+    }
+  </script>
+</body>
+</html>
